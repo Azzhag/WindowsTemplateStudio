@@ -126,7 +126,7 @@ namespace Microsoft.Templates.UI.ViewModels.NewItem
                 foreach (var dependencyTemplate in dependencies)
                 {
                     AddTemplate(userSelection, dependencyTemplate.GetDefaultName(), dependencyTemplate, dependencyTemplate.GetTemplateType());
-                }                
+                }
             }
             return userSelection;
         }

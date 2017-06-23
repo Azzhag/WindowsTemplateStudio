@@ -45,6 +45,8 @@ namespace Microsoft.Templates.Core.Locations
 
         public async Task Do()
         {
+            await CheckInstallDeployedContent();
+
             await CheckMandatoryAdquireContentAsync();
 
             await UpdateTemplatesCacheAsync();
@@ -54,9 +56,9 @@ namespace Microsoft.Templates.Core.Locations
             await CheckContentStatusAsync();
 
             PurgeContentAsync().FireAndForget();
+
             TelemetryService.Current.SetContentVersionToContext(CurrentContentVersion);
         }
-
 
         public async Task RefreshAsync()
         {
@@ -76,15 +78,16 @@ namespace Microsoft.Templates.Core.Locations
             await CheckContentOverVersion();
         }
 
-
-        private async Task CheckMandatoryAdquireContentAsync()
+        private async Task CheckInstallDeployedContent()
         {
-            await AdquireContentAsync(_source.ForcedAdquisition || _content.ExistUnderVersion());
-
-            if (!_content.Exists())
+            if (!_content.Exists() || RequireExtractInstalledContent())
             {
                 await ExtractInstalledContentAsync();
             }
+        }
+        private async Task CheckMandatoryAdquireContentAsync()
+        {
+            await AdquireContentAsync(_source.ForcedAdquisition || _content.ExistUnderVersion());
         }
 
         private async Task AdquireContentAsync(bool force = false)
@@ -108,7 +111,6 @@ namespace Microsoft.Templates.Core.Locations
             SyncStatusChanged?.Invoke(this, new SyncStatusEventArgs { Status = SyncStatus.Prepared });
         }
 
-
         private void AdquireContent()
         {
             try
@@ -125,13 +127,18 @@ namespace Microsoft.Templates.Core.Locations
         {
             try
             {
-                string installedTemplatesPath = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "InstalledTemplates", "Templates.mstx");
+                 string installedTemplatesPath = GetInstalledTemplatesPath();
                 _source.Extract(installedTemplatesPath, _content.TemplatesFolder);
             }
             catch (Exception ex)
             {
                 throw new RepositorySynchronizationException(SyncStatus.Adquiring, ex);
             }
+        }
+
+        private string GetInstalledTemplatesPath()
+        {
+            return Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "InstalledTemplates", "Templates.mstx");
         }
 
         private async Task UpdateTemplatesCacheAsync()
@@ -217,6 +224,10 @@ namespace Microsoft.Templates.Core.Locations
             }
         }
 
+        private bool RequireExtractInstalledContent()
+        {
+            return CurrentContentVersion.IsNull() || CurrentContentVersion < _source.GetVersionFromMstx(GetInstalledTemplatesPath());
+        }
         private Version GetCurrentContentVersion()
         {
             return _content?.GetVersionFromFolder(CurrentContentFolder);
