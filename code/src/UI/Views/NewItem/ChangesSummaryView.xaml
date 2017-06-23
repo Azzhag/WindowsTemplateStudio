@@ -6,6 +6,7 @@
       xmlns:res="clr-namespace:Microsoft.Templates.UI.Resources"
       xmlns:converters="clr-namespace:Microsoft.Templates.UI.Converters"
       xmlns:templateSelector="clr-namespace:Microsoft.Templates.UI.TemplateSelectors"
+      xmlns:controls="clr-namespace:Microsoft.Templates.UI.Controls"
       mc:Ignorable="d" 
       d:DesignHeight="300" d:DesignWidth="300">
 
@@ -97,9 +98,14 @@
                             <TextBlock Grid.Column="1" Text="{Binding Subject}" Margin="{StaticResource MediumLeftMargin}" VerticalAlignment="Center"/>
                         </Grid>
                     </Grid>
-                    <ScrollViewer Grid.Row="1">
+                    <controls:PrettifyControl
+                        Grid.Row="1"
+                        Foreground="{StaticResource UIBlack}"
+                        Background="{StaticResource UIWhite}"
+                        CSharpSource="{Binding NewFileString}"/>
+                    <!--<ScrollViewer Grid.Row="1">
                         <ItemsControl Margin="{StaticResource MediumMargin}" ItemsSource="{Binding NewFileLines}" ItemTemplateSelector="{StaticResource CodeLineTemplateSelector}"/>
-                    </ScrollViewer>
+                    </ScrollViewer>-->
                 </Grid>
             </DataTemplate>
             <DataTemplate x:Key="UnchangedtDetailTemplate">
@@ -136,9 +142,14 @@
             </DataTemplate>
 
             <DataTemplate x:Key="ModifiedDetailTemplate">
-                <ScrollViewer HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
+                <!--<ScrollViewer HorizontalScrollBarVisibility="Visible" VerticalScrollBarVisibility="Visible">
                     <ItemsControl ItemsSource="{Binding MergedFileLines}" Margin="{StaticResource MediumMargin}" ItemTemplateSelector="{StaticResource CodeLineTemplateSelector}"/>
-                </ScrollViewer>
+                </ScrollViewer>-->
+                <controls:PrettifyControl
+                        Grid.Row="1"
+                        Foreground="{StaticResource UIBlack}"
+                        Background="{StaticResource UIWhite}"
+                        CSharpSource="{Binding MergedFile}"/>
             </DataTemplate>
 
             <templateSelector:NewItemFileTemplateSelector

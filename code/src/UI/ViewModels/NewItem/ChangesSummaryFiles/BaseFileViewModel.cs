@@ -18,6 +18,7 @@ using System.Windows.Media;
 using Microsoft.Templates.Core.Gen;
 using Microsoft.Templates.Core.Mvvm;
 using Microsoft.Templates.UI.Comparison;
+using System.Text;
 
 namespace Microsoft.Templates.UI.ViewModels.NewItem
 {
@@ -38,6 +39,9 @@ namespace Microsoft.Templates.UI.ViewModels.NewItem
         public string Icon { get; private set; }
         public SolidColorBrush CircleColor { get; private set; }
         public FileExtension FileExtension { get; private set; }
+
+        public string NewFileString { get; private set; }
+        public string MergedFile { get; private set; }
 
         public ObservableCollection<CodeLineViewModel> NewFileLines { get; private set; } = new ObservableCollection<CodeLineViewModel>();
         public ObservableCollection<CodeLineViewModel> CurrentFileLines { get; private set; } = new ObservableCollection<CodeLineViewModel>();
@@ -85,6 +89,11 @@ namespace Microsoft.Templates.UI.ViewModels.NewItem
         private void LoadFile()
         {
             var newFilePath = Path.Combine(GenContext.Current.OutputPath, Subject);
+
+            if (File.Exists(newFilePath))
+            {
+                NewFileString = File.ReadAllText(newFilePath);
+            }
             var newFileCodeLines = ComparisonService.FromPath(newFilePath);
             NewFileLines.AddRange(newFileCodeLines.Select(cl => new CodeLineViewModel(cl)));
 
@@ -92,8 +101,24 @@ namespace Microsoft.Templates.UI.ViewModels.NewItem
             var currentFileCodeLines = ComparisonService.FromPath(currentFilePath);
             CurrentFileLines.AddRange(currentFileCodeLines.Select(cl => new CodeLineViewModel(cl)));
 
-            var comparsion = ComparisonService.CompareFiles(currentFileCodeLines, newFileCodeLines);
-            MergedFileLines.AddRange(comparsion.Select(cl => new CodeLineViewModel(cl)));
+            var comparison = ComparisonService.CompareFiles(currentFileCodeLines, newFileCodeLines);
+            MergedFileLines.AddRange(comparison.Select(cl => new CodeLineViewModel(cl)));
+
+            var sb = new StringBuilder();
+            foreach (var line in MergedFileLines)
+            {
+                string symbol = "  ";
+                if (line.Status == LineStatus.New)
+                {
+                    symbol = "++";
+                }
+                else if (line.Status == LineStatus.Deleted)
+                {
+                    symbol = "--";
+                }
+                sb.AppendLine($"{symbol} {line.Number} {line.Text}");
+            }
+            MergedFile = sb.ToString();
         }
 
         public void UpdateFontSize(double points)
